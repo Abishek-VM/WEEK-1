@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CBCS CGPA Calculator</title>
+  <style>
+    :root {
+      --bg: #eaf5ff;
+      --panel: #ffffff;
+      --panel-2: #edf6ff;
+      --text: #0f172a;
+      --muted: #4b5d7a;
+      --accent: #3b82f6;
+      --accent-2: #60a5fa;
+      --good: #0ea5e9;
+      --danger: #ef4444;
+      --border: rgba(59, 130, 246, 0.18);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background:
+        radial-gradient(circle at top, rgba(125, 211, 252, 0.35), transparent 28%),
+        radial-gradient(circle at right top, rgba(96, 165, 250, 0.20), transparent 22%),
+        linear-gradient(135deg, #eff7ff 0%, #dbeafe 45%, #eaf5ff 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: end;
+      margin-bottom: 24px;
+    }
+
+    h1 { margin: 0; font-size: clamp(2rem, 4vw, 2.8rem); }
+    .lead {
+      color: var(--muted);
+      max-width: 700px;
+      line-height: 1.5;
+      margin-top: 8px;
+    }
+
+    .badge {
+      background: linear-gradient(135deg, rgba(125, 211, 252, 0.25), rgba(147, 197, 253, 0.25));
+      border: 1px solid rgba(244, 211, 94, 0.18);
+      padding: 10px 14px;
+      border-radius: 14px;
+      color: var(--text);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      box-shadow: 0 10px 18px rgba(0, 0, 0, 0.18);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 24px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(240, 247, 255, 0.98));
+      border: 1px solid rgba(244, 211, 94, 0.12);
+      border-radius: 24px;
+      padding: 18px;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.30);
+      backdrop-filter: blur(6px);
+    }
+
+    .card h2 { margin: 0 0 6px 0; font-size: 1.1rem; }
+    .subtle { color: var(--muted); font-size: 0.95rem; }
+
+    .toolbar {
+      display: flex; justify-content: space-between; align-items: center; gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    button {
+      border: 0; border-radius: 12px; padding: 10px 14px; cursor: pointer;
+      font-weight: 700; color: #04111d;
+      background: linear-gradient(135deg, #dbeafe 0%, var(--accent) 48%, #2563eb 100%);
+      box-shadow: 0 10px 18px rgba(244, 211, 94, 0.18);
+      transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+    }
+    button:hover { transform: translateY(-1px); }
+    button.secondary {
+      background: linear-gradient(135deg, #e0f2fe, #bfdbfe);
+      color: var(--text);
+      border: 1px solid rgba(138, 99, 255, 0.25);
+      box-shadow: none;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr auto;
+      gap: 10px;
+      align-items: center;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border: 1px solid rgba(244, 211, 94, 0.10);
+      border-radius: 14px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+
+    label { display: block; font-size: 0.92rem; color: var(--muted); margin-bottom: 4px; }
+    input, select {
+      width: 100%; border-radius: 10px; border: 1px solid rgba(148, 163, 184, 0.35);
+      background: #ffffff; color: #0f172a; padding: 10px 12px; font-size: 0.98rem;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+    }
+
+    .result-box {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+      margin-top: 10px;
+    }
+
+    .metric {
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.03));
+      border: 1px solid rgba(244, 211, 94, 0.12);
+      border-radius: 16px;
+      padding: 12px;
+    }
+    .metric .label { color: var(--muted); font-size: 0.92rem; }
+    .metric .value { font-size: 1.55rem; font-weight: 800; margin-top: 4px; }
+    .metric.good .value { color: var(--good); }
+    .metric.warn .value { color: #ffd36b; }
+
+    .tip {
+      color: var(--muted); font-size: 0.95rem; line-height: 1.45;
+      background: rgba(81, 209, 255, 0.06); border: 1px solid var(--border); border-radius: 14px; padding: 10px;
+      margin-top: 10px;
+    }
+
+    .error-note {
+      color: #b91c1c;
+      background: rgba(254, 226, 226, 0.9);
+      border: 1px solid #fecaca;
+      border-radius: 12px;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 0.95rem;
+      display: none;
+    }
+
+    .chart-card {
+      margin-top: 12px;
+      border: 1px solid var(--border);
+      border-radius: 18px; 
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      padding: 10px;
+    }
+
+    .chart-card h3 {
+      margin: 0 0 6px 0;
+      font-size: 1rem;
+    }
+
+    .chart-card p {
+      margin: 0 0 8px 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .doc-row {
+      display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;
+    }
+
+    .partner-footer {
+      margin-top: 24px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: linear-gradient(135deg, rgba(255,255,255,0.75), rgba(239,246,255,0.92));
+      box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+      color: #0f172a;
+    }
+
+    .partner-footer h3 {
+      margin: 0 0 8px 0;
+      font-size: 1rem;
+    }
+
+    .partner-links {
+      display: flex; flex-wrap: wrap; gap: 10px;
+      align-items: center;
+    }
+
+    .partner-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      color: #0f172a;
+      font-weight: 600;
+      background: rgba(255,255,255,0.9);
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      border-radius: 999px;
+      padding: 8px 10px;
+      font-size: 0.92rem;
+    }
+
+    .partner-link:hover {
+      background: #eff6ff;
+    }
+
+    .icon-chip {
+      display: inline-grid;
+      place-items: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      background: linear-gradient(135deg, #2563eb, #38bdf8);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    @media (max-width: 980px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <header>
+      <div>
+        <div class="badge">CBCS CGPA Calculator</div>
+        <h1>Calculate your semester GPA and overall CGPA</h1>
+        <p class="lead">A simple student-friendly calculator for CBCS grading. Enter your credit hours and grade points to get instant results for each semester and your final CGPA.</p>
+      </div>
+      <div class="badge">Made for college students</div>
+    </header>
+
+    <section class="grid">
+      <article class="card">
+        <div class="toolbar">
+          <div>
+            <h2>Semester GPA (SGPA)</h2>
+            <p class="subtle">Use your CBCS grade points and credit hours for the current semester.</p>
+          </div>
+          <button onclick="addSubjectRow()">+ Add Subject</button>
+        </div>
+
+        <div id="subjectRows"></div>
+
+        <div class="toolbar" style="margin-top: 8px;">
+          <button onclick="calculateSGPA()">Calculate SGPA</button>
+          <button class="secondary" onclick="resetSubjects()">Reset</button>
+        </div>
+        <div class="doc-row">
+          <button class="secondary" onclick="downloadSGPADocument()">Download SGPA Document</button>
+        </div>
+
+        <div class="result-box">
+          <div class="metric good"><div class="label">SGPA</div><div class="value" id="sgpaResult">0.00</div></div>
+          <div class="metric warn"><div class="label">Total Credits</div><div class="value" id="creditsResult">0</div></div>
+        </div>
+        <div class="tip">Formula: SGPA = Sum(Credits × Grade Point) / Sum(Credits)</div>
+        <div id="sgpaError" class="error-note">Please use only positive credits and valid grades.</div>
+
+        <div class="chart-card">
+          <h3>Grade Distribution</h3>
+          <p>Count of subjects by grade across all entered subject rows.</p>
+          <div id="gradeChart" style="width:100%; height:280px;"></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="toolbar">
+          <div>
+            <h2>Overall CGPA</h2>
+            <p class="subtle">Enter your semester SGPA and total credits earned to find your cumulative GPA.</p>
+          </div>
+          <button onclick="addSemesterRow()">+ Add Semester</button>
+        </div>
+
+        <div id="semesterRows"></div>
+
+        <div class="toolbar" style="margin-top: 8px;">
+          <button onclick="calculateCGPA()">Calculate CGPA</button>
+          <button class="secondary" onclick="resetSemesters()">Reset</button>
+        </div>
+        <div class="doc-row">
+          <button class="secondary" onclick="downloadCGPADocument()">Download CGPA Document</button>
+        </div>
+
+        <div class="result-box">
+          <div class="metric good"><div class="label">Overall CGPA</div><div class="value" id="cgpaResult">0.00</div></div>
+          <div class="metric warn"><div class="label">Overall Credits</div><div class="value" id="overallCreditsResult">0</div></div>
+        </div>
+        <div class="tip">Formula: CGPA = Sum(Semester Credits × SGPA) / Sum(Semester Credits)</div>
+        <div id="cgpaError" class="error-note">Please use only positive semester credits and SGPA values from 0 to 10.</div>
+
+        <div class="chart-card">
+          <h3>SGPA Trend</h3>
+          <p>Line chart for SGPA across your semester entries.</p>
+          <div id="semesterChart" style="width:100%; height:280px;"></div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <footer class="container partner-footer">
+    <h3>Website Partner</h3>
+    <div class="partner-links">
+      <span>Abishek &amp; Aswin</span>
+      <a class="partner-link" href="https://www.linkedin.com/in/abishek71" target="_blank" rel="noopener noreferrer">
+        <span class="icon-chip">in</span> LinkedIn
+      </a>
+      <a class="partner-link" href="mailto:abluabishek@gmail.com">
+        <span class="icon-chip">@</span> abluabishek@gmail.com
+      </a>
+    </div>
+  </footer>
+
+  <script type="module">
+    import React from 'https://esm.sh/react@18';
+    import ReactDOM from 'https://esm.sh/react-dom@18';
+    import * as Recharts from 'https://esm.sh/recharts@2.12.7';
+
+    window.React = React;
+    window.ReactDOM = ReactDOM;
+    window.Recharts = Recharts;
+
+    const gradePoints = {
+      'O': 10,
+      'A+': 9,
+      'A': 8,
+      'B+': 7,
+      'B': 6,
+      'C': 5,
+      'F': 0,
+      'U': 0,
+      'Ab': 0
+    };
+
+    function createSubjectRow(index) {
+      return `
+        <div class="row" data-subject-row="${index}">
+          <div>
+            <label for="subject-${index}">Subject Name</label>
+            <input id="subject-${index}" type="text" value="" placeholder="Subject name" />
+          </div>
+          <div>
+            <label for="grade-${index}">Grade</label>
+            <select id="grade-${index}">
+              <option value="" selected>Select grade</option>
+              <option value="O">O</option>
+              <option value="A+">A+</option>
+              <option value="A">A</option>
+              <option value="B+">B+</option>
+              <option value="B">B</option>
+              <option value="C">C</option>
+              <option value="F">F</option>
+            </select>
+          </div>
+          <div>
+            <label for="credit-${index}">Credits</label>
+            <input id="credit-${index}" type="number" min="0" step="0.5" value="" placeholder="Credits" />
+          </div>
+        </div>`;
+    }
+
+    function createSemesterRow(index) {
+      return `
+        <div class="row" data-semester-row="${index}">
+          <div>
+            <label for="sem-${index}">Semester</label>
+            <input id="sem-${index}" type="text" value="" placeholder="Semester name" />
+          </div>
+          <div>
+            <label for="sem-credit-${index}">Credits</label>
+            <input id="sem-credit-${index}" type="number" min="0" step="0.5" value="" placeholder="Credits" />
+          </div>
+          <div>
+            <label for="sem-gpa-${index}">SGPA</label>
+            <input id="sem-gpa-${index}" type="number" min="0" max="10" step="0.01" value="" placeholder="SGPA" />
+          </div>
+        </div>`;
+    }
+
+    function renderDefaultRows() {
+      const subjectRows = document.getElementById('subjectRows');
+      const semesterRows = document.getElementById('semesterRows');
+      subjectRows.innerHTML = '';
+      semesterRows.innerHTML = '';
+      for (let i = 0; i < 4; i++) subjectRows.insertAdjacentHTML('beforeend', createSubjectRow(i));
+      for (let i = 0; i < 2; i++) semesterRows.insertAdjacentHTML('beforeend', createSemesterRow(i));
+    }
+
+    function resetSubjectPanel() {
+      const subjectRows = document.getElementById('subjectRows');
+      subjectRows.innerHTML = '';
+      for (let i = 0; i < 4; i++) subjectRows.insertAdjacentHTML('beforeend', createSubjectRow(i));
+      document.getElementById('sgpaResult').textContent = '0.00';
+      document.getElementById('creditsResult').textContent = '0';
+      hideError('sgpaError');
+      renderGradeDistributionChart();
+    }
+
+    function resetSemesterPanel() {
+      const semesterRows = document.getElementById('semesterRows');
+      semesterRows.innerHTML = '';
+      for (let i = 0; i < 2; i++) semesterRows.insertAdjacentHTML('beforeend', createSemesterRow(i));
+      document.getElementById('cgpaResult').textContent = '0.00';
+      document.getElementById('overallCreditsResult').textContent = '0';
+      hideError('cgpaError');
+      renderSemesterChart();
+    }
+
+    window.addSubjectRow = function () {
+      const rows = document.getElementById('subjectRows');
+      const count = rows.children.length;
+      rows.insertAdjacentHTML('beforeend', createSubjectRow(count));
+    };
+
+    window.addSemesterRow = function () {
+      const rows = document.getElementById('semesterRows');
+      const count = rows.children.length;
+      rows.insertAdjacentHTML('beforeend', createSemesterRow(count));
+    };
+
+    function showError(elementId, message) {
+      const el = document.getElementById(elementId);
+      el.textContent = message;
+      el.style.display = 'block';
+    }
+
+    function hideError(elementId) {
+      document.getElementById(elementId).style.display = 'none';
+    }
+
+    window.calculateSGPA = function () {
+      const rows = document.querySelectorAll('[data-subject-row]');
+      let hasError = false;
+      let errorMessage = 'Please use only positive credits and valid grades.';
+
+      rows.forEach((row, index) => {
+        const grade = document.getElementById(`grade-${index}`).value;
+        const credit = parseFloat(document.getElementById(`credit-${index}`).value);
+
+        if (grade && !Object.prototype.hasOwnProperty.call(gradePoints, grade)) {
+          hasError = true;
+        }
+        if (!Number.isFinite(credit) || credit < 0) {
+          hasError = true;
+        }
+      });
+
+      if (hasError) {
+        showError('sgpaError', errorMessage);
+        return;
+      }
+
+      hideError('sgpaError');
+      let totalCredits = 0;
+      let weightedSum = 0;
+
+      rows.forEach((row, index) => {
+        const grade = document.getElementById(`grade-${index}`).value;
+        const credit = parseFloat(document.getElementById(`credit-${index}`).value) || 0;
+        const points = gradePoints[grade] || 0;
+        totalCredits += credit;
+        weightedSum += credit * points;
+      });
+
+      const sgpa = totalCredits > 0 ? weightedSum / totalCredits : 0;
+      document.getElementById('sgpaResult').textContent = sgpa.toFixed(2);
+      document.getElementById('creditsResult').textContent = totalCredits.toFixed(1);
+      renderGradeDistributionChart();
+    };
+
+    window.calculateCGPA = function () {
+      const rows = document.querySelectorAll('[data-semester-row]');
+      let hasError = false;
+
+      rows.forEach((row, index) => {
+        const credits = parseFloat(document.getElementById(`sem-credit-${index}`).value);
+        const gpa = parseFloat(document.getElementById(`sem-gpa-${index}`).value);
+
+        if (!Number.isFinite(credits) || credits < 0) hasError = true;
+        if (!Number.isFinite(gpa) || gpa < 0 || gpa > 10) hasError = true;
+      });
+
+      if (hasError) {
+        showError('cgpaError', 'Please use only positive semester credits and SGPA values from 0 to 10.');
+        return;
+      }
+
+      hideError('cgpaError');
+      let totalCredits = 0;
+      let weightedSum = 0;
+
+      rows.forEach((row, index) => {
+        const credits = parseFloat(document.getElementById(`sem-credit-${index}`).value) || 0;
+        const gpa = parseFloat(document.getElementById(`sem-gpa-${index}`).value) || 0;
+        totalCredits += credits;
+        weightedSum += credits * gpa;
+      });
+
+      const cgpa = totalCredits > 0 ? weightedSum / totalCredits : 0;
+      document.getElementById('cgpaResult').textContent = cgpa.toFixed(2);
+      document.getElementById('overallCreditsResult').textContent = totalCredits.toFixed(1);
+      renderSemesterChart();
+    };
+
+    window.resetSubjects = function () {
+      resetSubjectPanel();
+    };
+
+    window.resetSemesters = function () {
+      resetSemesterPanel();
+    };
+
+    function renderGradeDistributionChart() {
+      const chartRoot = document.getElementById('gradeChart');
+      const rows = Array.from(document.querySelectorAll('[data-subject-row]'));
+      const { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } = Recharts;
+
+      const gradeOrder = ['O', 'A+', 'A', 'B+', 'B', 'C', 'F'];
+      const colors = {
+        O: '#22c55e',
+        'A+': '#2dd4bf',
+        A: '#3b82f6',
+        'B+': '#fbbf24',
+        B: '#fb923c',
+        C: '#f97316',
+        F: '#ef4444'
+      };
+
+      const counts = gradeOrder.map(grade => ({
+        name: grade,
+        value: rows.filter((_, index) => {
+          const selected = document.getElementById(`grade-${index}`).value;
+          return selected === grade;
+        }).length
+      })).filter(item => item.value > 0);
+
+      if (!counts.length) {
+        chartRoot.innerHTML = '<div class="tip">Add subjects with grades to view the grade distribution chart.</div>';
+        return;
+      }
+
+      ReactDOM.render(
+        React.createElement(
+          'div',
+          { style: { width: '100%', height: '100%' } },
+          React.createElement(
+            ResponsiveContainer,
+            null,
+            React.createElement(
+              PieChart,
+              null,
+              React.createElement(Pie, {
+                data: counts,
+                dataKey: 'value',
+                nameKey: 'name',
+                innerRadius: 56,
+                outerRadius: 90,
+                paddingAngle: 2,
+                stroke: '#fff',
+                strokeWidth: 2,
+                labelLine: false
+              }, counts.map(item => React.createElement(Cell, { key: item.name, fill: colors[item.name] }))),
+              React.createElement(Tooltip, { formatter: (value) => [`${value} subject${value === 1 ? '' : 's'}`, 'Count'] }),
+              React.createElement(Legend, { verticalAlign: 'bottom', height: 36, formatter: (value, entry) => `${value} — ${entry.payload.value} subject${entry.payload.value === 1 ? '' : 's'}` })
+            )
+          )
+        ),
+        chartRoot
+      );
+    }
+
+    function renderSemesterChart() {
+      const chartRoot = document.getElementById('semesterChart');
+      const rows = Array.from(document.querySelectorAll('[data-semester-row]'));
+      const { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine } = Recharts;
+
+      if (!rows.length || rows.length < 2) {
+        chartRoot.innerHTML = '<div class="tip">Add at least two semesters to view the SGPA trend chart.</div>';
+        return;
+      }
+
+      const data = rows.map((row, index) => ({
+        name: document.getElementById(`sem-${index}`).value || `Semester ${index + 1}`,
+        sgpa: parseFloat(document.getElementById(`sem-gpa-${index}`).value) || 0
+      }));
+
+      const currentCgpa = parseFloat(document.getElementById('cgpaResult').textContent) || 0;
+
+      ReactDOM.render(
+        React.createElement(
+          'div',
+          { style: { width: '100%', height: '100%' } },
+          React.createElement(
+            ResponsiveContainer,
+            null,
+            React.createElement(
+              LineChart,
+              { data, margin: { top: 10, right: 12, left: 0, bottom: 0 } },
+              React.createElement(CartesianGrid, { stroke: 'rgba(148,163,184,0.25)', strokeDasharray: '4 4' }),
+              React.createElement(XAxis, { dataKey: 'name', tickLine: false, axisLine: false, tick: { fill: '#475569', fontSize: 12 } }),
+              React.createElement(YAxis, { domain: [0, 10], tickCount: 6, tickLine: false, axisLine: false, tick: { fill: '#475569', fontSize: 12 } }),
+              React.createElement(Tooltip, { formatter: (value) => [Number(value).toFixed(2), 'SGPA'], contentStyle: { borderRadius: 12, border: '1px solid #dbeafe' } }),
+              React.createElement(Line, { type: 'monotone', dataKey: 'sgpa', stroke: '#2563eb', strokeWidth: 3, dot: { r: 4, fill: '#2563eb', stroke: '#fff', strokeWidth: 2 }, activeDot: { r: 6 } }),
+              React.createElement(ReferenceLine, { y: currentCgpa, stroke: '#0ea5e9', strokeDasharray: '6 6', label: { value: `CGPA ${currentCgpa.toFixed(2)}`, position: 'insideTopRight', fill: '#0f172a', fontSize: 11 } })
+            )
+          )
+        ),
+        chartRoot
+      );
+    }
+
+    window.downloadSGPADocument = function () {
+      window.calculateSGPA();
+      const sgpa = document.getElementById('sgpaResult').textContent;
+      const credits = document.getElementById('creditsResult').textContent;
+      const rows = Array.from(document.querySelectorAll('[data-subject-row]'));
+      const lines = [
+        'CBCS SGPA Document',
+        '=================',
+        `SGPA: ${sgpa}`,
+        `Total Credits: ${credits}`,
+        '',
+        'Subject Details:'
+      ];
+      rows.forEach((row, index) => {
+        const subject = document.getElementById(`subject-${index}`).value || `Subject ${index + 1}`;
+        const grade = document.getElementById(`grade-${index}`).value || 'Not selected';
+        const credit = document.getElementById(`credit-${index}`).value || '0';
+        lines.push(`- ${subject} | Grade: ${grade} | Credits: ${credit}`);
+      });
+      downloadTextFile('sgpa-report.txt', lines.join('\n'));
+    };
+
+    window.downloadCGPADocument = function () {
+      window.calculateCGPA();
+      const cgpa = document.getElementById('cgpaResult').textContent;
+      const credits = document.getElementById('overallCreditsResult').textContent;
+      const rows = Array.from(document.querySelectorAll('[data-semester-row]'));
+      const lines = [
+        'CBCS CGPA Document',
+        '=================',
+        `CGPA: ${cgpa}`,
+        `Overall Credits: ${credits}`,
+        '',
+        'Semester Details:'
+      ];
+      rows.forEach((row, index) => {
+        const sem = document.getElementById(`sem-${index}`).value || `Semester ${index + 1}`;
+        const credit = document.getElementById(`sem-credit-${index}`).value || '0';
+        const gpa = document.getElementById(`sem-gpa-${index}`).value || '0';
+        lines.push(`- ${sem} | Credits: ${credit} | SGPA: ${gpa}`);
+      });
+      downloadTextFile('cgpa-report.txt', lines.join('\n'));
+    };
+
+    function downloadTextFile(filename, content) {
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      link.click();
+      URL.revokeObjectURL(link.href);
+    }
+
+    renderDefaultRows();
+    renderGradeDistributionChart();
+    renderSemesterChart();
+  </script>
+</body>
+</html>
