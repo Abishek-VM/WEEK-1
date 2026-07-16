@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Forms</title>
+  </head>
+  <body   >
+    <form id="studentForm" action="" method="post">
+      <label for="name">Name:</label>
+      <input type="text" id="name" name="name" required /> <br />
+      <br />
+      <label for="regno">Regno:</label>
+      <input type="text" id="regno" name="regno" required /> <br />
+      <br />
+      <label for="branch">Branch: </label>
+      <select id="branch" name="branch" required>
+        <option value="">Select Branch</option>
+        <option value="CSE">Computer Science Engineering</option>
+        <option value="IT">Information Technology</option>
+        <option value="EC">Electronics and Communication</option>
+        <option value="EE">Electrical Engineering</option>
+      </select>
+      <br />
+      <br />
+      <label for="year">Year:</label>
+      <input type="radio" id="year" name="year" value="1" required /> 1st Year
+      <input type="radio" id="year" name="year" value="2" required /> 2nd Year
+      <input type="radio" id="year" name="year" value="3" required /> 3rd Year
+      <input type="radio" id="year" name="year" value="4" required /> 4th Year
+      <br />
+      <br />
+      <label for="email">Email:</label>
+      <input type="email" id="email" name="email" required /> <br />
+      <br />
+
+      <label for="Place">Place:</label>
+      <input type="text" id="Place" name="Place" required /> <br />
+      <br />
+      <label for="dob">Date of Birth:</label>
+      <input type="date" id="dob" name="dob" required /> <br />
+      <br />
+      <label for="file">Resume:</label>
+      <input type="file" id="file" name="file" accept=".pdf,.doc,.docx" required /> <br> <br>
+      <label for="link">Resume Link:</label>
+      <input type="url" id="link" name="link" /> <br />
+
+       <br>
+      <button type="button" onclick="myfun()">Submit</button>
+    </form>
+
+    <table style=" background-color: aqua; border: 3px solid black; border-radius: 3px; margin-top: 50px; margin-bottom: 50px; border-collapse: collapse;" cellpadding="10" cellspacing="10">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Regno</th>
+          <th>Branch</th>
+          <th>Year</th>
+          <th>Email</th>
+          <th>Place</th>
+          <th>Date of Birth</th>
+          <th>Resume</th>
+          <th>Resume Link</th>
+        </tr>
+      </thead>
+      <tbody id="students">
+      </tbody>
+    </table>
+  </body>
+
+  <script>
+    function myfun() {
+      const form = document.getElementById('studentForm');
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+      const a = document.getElementById("name").value.trim();
+      const b = document.getElementById("regno").value.trim();
+      const c = document.getElementById("branch").value;
+      const yearInput = document.querySelector('input[name="year"]:checked');
+      const d = yearInput ? yearInput.value : '';
+      const e = document.getElementById("email").value.trim();
+      const f = document.getElementById("Place").value.trim();
+      const g = document.getElementById("dob").value;
+      const h = document.getElementById("file").value;
+      const i = document.getElementById("link").value.trim();
+      const tbody = document.getElementById('students');
+      const tr = document.createElement('tr');
+      [a, b, c, d, e, f, g, h, i].forEach(text => {
+        const td = document.createElement('td');
+        td.textContent = text;
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+
+      form.reset();
+      document.getElementById('name').focus();
+    }
+  </script>
+</html>
